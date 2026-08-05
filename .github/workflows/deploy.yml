@@ -1,0 +1,67 @@
+# Navn på workflowet - vises under "Actions"-fanen på GitHub
+name: Deploy til GitHub Pages
+
+# Hvornår workflowet skal køre
+on:
+  push:
+    branches: [main] # Kør automatisk hver gang der pushes til main
+  workflow_dispatch: # Tillader dig også at trigge den manuelt fra GitHub UI
+
+# Rettigheder workflowet har brug for
+permissions:
+  contents: read # Skal kunne læse repoets indhold (koden)
+  pages: write # Skal kunne skrive/udgive til GitHub Pages
+  id-token: write # Bruges til sikker godkendelse mod Pages-deployment
+
+# Sørger for at kun én deployment kører ad gangen
+# Hvis du pusher flere gange hurtigt, annulleres den gamle kørsel til fordel for den nye
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------
+  # JOB 1: Byg appen
+  # ---------------------------
+  build:
+    runs-on: ubuntu-latest # Kører på en frisk Ubuntu-server hos GitHub
+    steps:
+      # Henter din kode ned på build-serveren
+      - uses: actions/checkout@v4
+
+      # Installerer Node.js, så vi kan køre npm-kommandoer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm # Cacher dependencies, så builds kører hurtigere
+
+      # Installerer alle dependencies præcis som i package-lock.json
+      - run: npm ci
+
+      # Bygger appen med Vite -> laver statiske filer i en "dist"-mappe
+      - run: npm run build
+        env:
+          # Secrets hentes fra repo-indstillinger og injiceres som miljøvariabler
+          # under buildet, så appen ved hvor Supabase-backenden er
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      # Pakker "dist"-mappen sammen som en artifact, klar til at blive udgivet
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  # ---------------------------
+  # JOB 2: Udgiv appen
+  # ---------------------------
+  deploy:
+    needs: build # Venter på at build-jobbet er færdigt og succesfuldt
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      # URL'en til den live side gøres tilgængelig efter deployment
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Tager artifacten fra build-jobbet og udgiver den som GitHub Pages-siden
+      - id: deployment
+        uses: actions/deploy-pages@v4
