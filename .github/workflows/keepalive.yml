@@ -1,0 +1,23 @@
+# Holder Supabase-projektet vågent. Gratis-projekter sættes på pause
+# efter 7 dages inaktivitet - et dagligt kald er nok til at undgå det.
+name: Hold Supabase vågen
+
+on:
+  schedule:
+    # Hver dag kl. 06:17 UTC. Skæve minuttal anbefales af GitHub:
+    # runde tider er overbelastede, og kørslen bliver forsinket.
+    - cron: "17 6 * * *"
+  workflow_dispatch: # Så du også kan trigge den manuelt
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      # Læser én række fra ping-tabellen via Supabase's REST API.
+      # -sS: stille, men vis fejl.  --fail-with-body: exit != 0 ved 4xx/5xx
+      #      OG vis svaret, så fejlbeskeden står i loggen.
+      - name: Ping Supabase
+        run: |
+          curl --fail-with-body -sS -w "\nHTTP %{http_code}\n" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/ping?select=id&limit=1" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}"
