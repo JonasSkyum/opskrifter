@@ -15,8 +15,13 @@
 @media (min-width: 560px) {
   .app {
     width: 390px;
-    min-height: 780px;
-    max-height: 100dvh;
+    /* Fast højde, ikke min-height: rammen skal rummes i vinduet inklusive
+       marginerne, ellers får siden sin egen rullebjælke ved siden af
+       skærmens. Indholdet ruller i .screen__body. */
+    height: min(780px, calc(100dvh - 48px));
+    /* Nulstiller min-height fra basereglen - den ville ellers vinde over
+       height og skubbe rammen ud over vinduet igen. */
+    min-height: 0;
     margin: 24px auto;
     border: 1px solid var(--line-mid);
     overflow: hidden;
