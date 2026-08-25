@@ -1,0 +1,366 @@
+/* Delte komponentklasser. Ét sted, så skærmene forbliver læsbare. */
+
+/* ---------- Ramme ----------------------------------------------------- */
+
+/* På telefon fylder appen skærmen. På desktop vises den som en 390px flade
+   på lærredet - samme ramme som mockup'en, så designet kan vurderes. */
+.app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--surface);
+}
+
+@media (min-width: 560px) {
+  .app {
+    width: 390px;
+    min-height: 780px;
+    max-height: 100dvh;
+    margin: 24px auto;
+    border: 1px solid var(--line-mid);
+    overflow: hidden;
+  }
+}
+
+/* Skærm = header, rullende krop, evt. fast fod. */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.screen__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen__foot {
+  padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Typografiske hjælpere ------------------------------------- */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-4);
+}
+
+/* Hårfin streg der spiser resten af rækken. */
+.rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ---------- Knapper ---------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  color: var(--ink-2);
+}
+
+.btn--primary {
+  min-height: 58px;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 17px;
+}
+
+.btn--primary:hover {
+  background: var(--accent-dark);
+}
+
+.btn--tall {
+  min-height: 64px;
+  font-size: 18px;
+  font-weight: 700;
+  width: 100%;
+}
+
+.btn--outline {
+  border-color: var(--line-strong);
+}
+
+.btn--outline:hover {
+  background: var(--surface-2);
+}
+
+.btn--accent-outline {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--dashed {
+  border: 1px dashed var(--line-strong);
+  color: var(--accent);
+  width: 100%;
+}
+
+.btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Tekstknap i en topbar. */
+.btn--bare {
+  min-height: var(--tap);
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---------- Felter ----------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.field input,
+.field select {
+  height: 54px;
+  padding: 0 14px;
+  font-size: 17px;
+}
+
+.field textarea {
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.field input.mono {
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Chips ------------------------------------------------------ */
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  height: 44px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--line-mid);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+
+/* ---------- Topbar og bundlinje ---------------------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: calc(36px + env(safe-area-inset-top)) 12px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar__title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.tabbar {
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar__tab {
+  flex: 1;
+  height: 62px;
+  border-right: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.tabbar__tab:last-child {
+  border-right: none;
+}
+
+.tabbar__tab[aria-current='page'] {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ---------- Billed-placeholder ----------------------------------------- */
+
+/* Skravering frem for grå kasse: signalerer "her kommer et foto", ikke
+   "her mangler noget". */
+.thumb {
+  background: repeating-linear-gradient(
+    135deg,
+    #dde2d8 0 9px,
+    #e9ebe4 9px 18px
+  );
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+}
+
+.thumb--sm {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #dde2d8 0 7px,
+    #e9ebe4 7px 14px
+  );
+}
+
+.thumb__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-4);
+  background: var(--surface);
+  padding: 3px 6px;
+}
+
+/* ---------- Beskeder --------------------------------------------------- */
+
+.notice {
+  margin: var(--gutter);
+  padding: 18px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-line);
+  color: var(--danger);
+}
+
+.notice__title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.notice__body {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+.notice .btn {
+  margin-top: 14px;
+  background: var(--danger);
+  color: var(--danger-bg);
+}
+
+.empty {
+  margin: var(--gutter);
+  padding: 22px;
+  border: 1px dashed var(--line-strong);
+  text-align: center;
+}
+
+.empty__body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin-top: 8px;
+}
+
+.empty .btn {
+  margin-top: 16px;
+}
+
+/* ---------- Diverse ---------------------------------------------------- */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spacer {
+  flex: 1;
+}
