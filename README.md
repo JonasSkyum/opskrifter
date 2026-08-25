@@ -25,8 +25,10 @@ VITE_SUPABASE_URL=https://<projekt>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon key>
 ```
 
-Skemaet ligger i [`supabase/schema.sql`](supabase/schema.sql) og skal køres én
-gang i SQL-editoren. Fremgangsmåden står i [`docs/PLAN.md`](docs/PLAN.md).
+Skemaet ligger i [`supabase/schema.sql`](supabase/schema.sql) og er kørt på det
+projekt appen bruger. Filen er der for at kunne rejse backenden igen fra bunden,
+og den kan køres oven på en database der allerede har den — hver politik droppes
+før den oprettes. Fremgangsmåden står i [`docs/PLAN.md`](docs/PLAN.md), fase 3.
 
 ## Kommandoer
 
@@ -41,6 +43,19 @@ gang i SQL-editoren. Fremgangsmåden står i [`docs/PLAN.md`](docs/PLAN.md).
 
 - [`docs/PLAN.md`](docs/PLAN.md) — hvad der bygges, i hvilken rækkefølge
 - [`docs/DESIGN.md`](docs/DESIGN.md) — designsystem og datakontrakt
+
+## Offline
+
+Appen er en PWA og kan lægges på hjemmeskærmen. Når en opskrift først er åbnet,
+virker kogetilstand uden net — også efter appen har været lukket. Service
+workeren ligger i [`public/sw.js`](public/sw.js); `VERSION` i toppen skal bumpes
+når dens logik ændres, ellers ryddes gamle caches ikke.
+
+Under `npm run dev` registreres den ikke. Vil du afprøve den, skal du bygge:
+
+```bash
+npm run build && npm run preview
+```
 
 ## Udgivelse
 

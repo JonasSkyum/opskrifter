@@ -1,0 +1,40 @@
+{
+  "name": "Opskrifter",
+  "short_name": "Opskrifter",
+  "description": "Vores opskrifter, ét sted.",
+  "lang": "da",
+  "dir": "ltr",
+  "start_url": "/opskrifter/",
+  "scope": "/opskrifter/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#f2f3ee",
+  "background_color": "#fdfdfb",
+  "icons": [
+    {
+      "src": "/opskrifter/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/opskrifter/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/opskrifter/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ny opskrift",
+      "short_name": "Ny",
+      "url": "/opskrifter/ny"
+    }
+  ]
+}

@@ -7,6 +7,15 @@
     <meta name="theme-color" content="#F2F3EE" />
     <meta name="description" content="Vores opskrifter, ét sted." />
 
+    <!-- Installérbar: fra hjemmeskærmen åbner den uden browserramme.
+         iOS læser ikke manifestet til alt, derfor apple-meta'erne ved siden af. -->
+    <link rel="manifest" href="/opskrifter/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/opskrifter/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Opskrifter" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

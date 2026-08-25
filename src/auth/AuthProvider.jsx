@@ -76,15 +76,35 @@ export function AuthProvider({ children }) {
         if (!hasSupabase) {
           localStorage.removeItem(DEMO_KEY)
           setSession(null)
+          clearCachedData()
           return
         }
         await supabase.auth.signOut()
+        clearCachedData()
       },
     }),
     [session, ready],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>
+}
+
+/**
+ * Service workeren cacher opskrifter og favoritter så kogetilstand virker
+ * offline. De svar tilhører den der var logget ind, så de skal væk igen -
+ * ellers ser den næste på samme enhed den forriges samling.
+ *
+ * Beskeden sendes til registreringens aktive worker, ikke til
+ * navigator.serviceWorker.controller: controller er null i det dokument der
+ * indlæste siden før workeren nåede at aktivere, og netop dér ville
+ * oprydningen ellers stille blive sprunget over.
+ */
+function clearCachedData() {
+  navigator.serviceWorker?.ready
+    .then((registration) => registration.active?.postMessage({ type: 'ryd-data' }))
+    .catch(() => {
+      // Ingen service worker (dev, eller en browser uden). Intet at rydde.
+    })
 }
 
 /**
