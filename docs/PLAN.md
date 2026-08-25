@@ -79,9 +79,14 @@ resten. Revurderes hvis datamodellen vokser.
 
 Alle seks skærme, inkl. tilstande: tom, fejl, ingen billeder.
 
-### Fase 3 — Supabase-backend ⏳ *næste*
+### Fase 3 — Supabase-backend ⏳ *næste — og det der blokerer*
 
-Skemaet ligger klar i `supabase/schema.sql`. Mangler at blive kørt.
+Skemaet ligger klar i `supabase/schema.sql`, men er **ikke kørt endnu**.
+
+Så længe `.env.local` peger på et projekt uden tabellerne, kan man ikke logge
+ind: klienten når frem til Supabase, men der er ingen `profiles`, ingen
+`recipes` og ingen invitationskoder. Fjern nøglerne fra `.env.local` for at
+køre på demodata i mellemtiden.
 
 1. Kør `schema.sql` i SQL-editoren på projektet.
 2. Slå e-mail-signup til, slå e-mail-bekræftelse fra (lukket kreds, koden er
@@ -149,9 +154,31 @@ køkkenredskab.
 
 ## 5. Kendte huller
 
-- `demoState` og `imagery` fra mockup'en findes som URL-parametre
-  (`?demo=error`, `?imagery=none`) til test. De skal væk før rigtig brug — eller
-  blive, de er harmløse.
+- **Skemaet er ikke kørt.** Se fase 3. Det er den eneste ting mellem appen og
+  at den virker på rigtigt.
+- `demo` og `imagery` findes som URL-parametre (`?demo=error`,
+  `?imagery=none`) til at fremkalde tilstande under udvikling. Harmløse, men
+  de er udviklerværktøj, ikke funktioner.
 - `local`-adapteren deler ikke på tværs af enheder. Den er en demo, ikke en
   backend.
 - Invitationskoder har ingen udløbsdato endnu, kun `max_uses`.
+- Trinnenes kobling til ingredienser (`ing`) kan ikke redigeres i formularen
+  endnu — den bevares ved rettelser, men nye trin får ingen. Kogetilstand
+  viser så bare ingen mængder ved det trin.
+- Ingen tests. Datalaget og `scale.js` er det der først bør have nogle.
+
+## 6. Sådan er det afprøvet
+
+Alle seks skærme er kørt igennem mod `local`-adapteren i browseren:
+
+- Bibliotek: søgning, alle seks filtre, tom-tilstand, fejltilstand,
+  `?imagery=none`, dagens forslag.
+- Opskrift: skalering 4 → 5 portioner regner rigtigt (800 g → 1000 g,
+  1,2 kg → 1,5 kg) og lader "efter smag" stå.
+- Kogetilstand: bærer portionsantallet med fra opskriften, trinvis
+  navigation, timer, wake lock.
+- Opret/ret: kladde, validering af manglende titel, gem, og "1,5" og "1.5"
+  bliver begge til halvanden.
+- Deling: synlighed og personer.
+
+Ikke afprøvet: `remote`-adapteren, som venter på at skemaet bliver kørt.
