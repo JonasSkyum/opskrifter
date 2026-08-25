@@ -1,0 +1,55 @@
+/* Designtokens. Udtrukket fra mockup'en - se docs/DESIGN.md. */
+
+:root {
+  /* Flader */
+  --paper: #fdfdfb;
+  --surface: #f2f3ee;
+  --surface-2: #e9ebe4;
+  --surface-3: #edf1ea;
+  --canvas: #dce0d6;
+
+  /* Streger, fra blødeste til stærkeste */
+  --line-softer: #e4e7df;
+  --line-soft: #dde1d8;
+  --line: #c9cfc4;
+  --line-mid: #b7bfb0;
+  --line-strong: #a9b3a6;
+
+  /* Blæk, fra mørkest til lysest */
+  --ink: #1e2420;
+  --ink-2: #37423a;
+  --ink-3: #4c5a4e;
+  --ink-4: #5a6a5c;
+  --ink-5: #6c7a6d;
+
+  --accent: #2e6250;
+  --accent-dark: #24503f;
+
+  /* Kogetilstand */
+  --night: #16201b;
+  --night-2: #2c3b31;
+  --night-line: #3c4e42;
+  --night-accent: #8fc0a9;
+  --night-ink: #f6f7f2;
+  --night-ink-2: #e6eae2;
+  --night-ink-3: #9db3a2;
+  --night-ink-4: #7c8f80;
+
+  /* Fejl og destruktive handlinger */
+  --danger-bg: #f7e9e2;
+  --danger-line: #c08a6e;
+  --danger: #6b2e12;
+
+  /* Skrift */
+  --font-display: Newsreader, Georgia, "Times New Roman", serif;
+  --font-body: Archivo, system-ui, -apple-system, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Rum */
+  --gutter: 20px;
+  --tap: 48px;
+
+  --radius: 2px;
+
+  color-scheme: light;
+}

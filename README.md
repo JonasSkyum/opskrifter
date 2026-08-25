@@ -1,16 +1,49 @@
-# React + Vite
+# Opskrifter
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+En privat opskriftsapp for en lille lukket kreds. Ingen offentlig tilmelding —
+man kommer ind med en invitationskode.
 
-Currently, two official plugins are available:
+Bygget som React + Vite, udgivet statisk på GitHub Pages, med Supabase som
+backend.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Kom i gang
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Appen kører uden Supabase-nøgler. Mangler `.env.local`, bruger den en lokal
+adapter med demodata i `localStorage` — fuldt funktionel, men kun på din egen
+maskine.
 
-## Expanding the Oxlint configuration
+Med backend:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+# .env.local
+VITE_SUPABASE_URL=https://<projekt>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
+
+Skemaet ligger i [`supabase/schema.sql`](supabase/schema.sql) og skal køres én
+gang i SQL-editoren. Fremgangsmåden står i [`docs/PLAN.md`](docs/PLAN.md).
+
+## Kommandoer
+
+| Kommando          | Gør |
+| ----------------- | --- |
+| `npm run dev`     | Udviklingsserver med HMR |
+| `npm run build`   | Statisk build i `dist/` |
+| `npm run preview` | Server buildet lokalt |
+| `npm run lint`    | Oxlint |
+
+## Dokumentation
+
+- [`docs/PLAN.md`](docs/PLAN.md) — hvad der bygges, i hvilken rækkefølge
+- [`docs/DESIGN.md`](docs/DESIGN.md) — designsystem og datakontrakt
+
+## Udgivelse
+
+Push til `main` udløser `.github/workflows/deploy.yml`, som bygger og udgiver
+til GitHub Pages. `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` skal ligge
+som repository secrets.
