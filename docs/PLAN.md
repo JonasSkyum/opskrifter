@@ -79,30 +79,31 @@ resten. Revurderes hvis datamodellen vokser.
 
 Alle seks skærme, inkl. tilstande: tom, fejl, ingen billeder.
 
-### Fase 3 — Supabase-backend ⏳ *næste — og det der blokerer*
+### Fase 3 — Supabase-backend ✅
 
-Skemaet ligger klar i `supabase/schema.sql`, men er **ikke kørt endnu**.
+Skemaet i `supabase/schema.sql` er kørt. Det der manglede bagefter var ikke
+tabellerne, men tre ting omkring dem:
 
-Så længe `.env.local` peger på et projekt uden tabellerne, kan man ikke logge
-ind: klienten når frem til Supabase, men der er ingen `profiles`, ingen
-`recipes` og ingen invitationskoder. Fjern nøglerne fra `.env.local` for at
-køre på demodata i mellemtiden.
+1. **Rettigheder.** `anon` og `authenticated` havde ikke `grant` på de fem
+   tabeller. RLS og GRANT er to lag: uden GRANT svarer PostgREST `42501
+   permission denied` i stedet for at RLS filtrerer, og appen ser brudt ud
+   selvom hver eneste politik er rigtig. Filen sætter dem nu eksplicit.
+2. **E-mail-bekræftelse** var slået til. Slået fra i dashboardet — kredsen er
+   lukket, og invitationskoden er gatekeeperen. En bekræftelsesmail tilføjer
+   ingen sikkerhed, kun en gratis-SMTP-kø der kan fejle.
+3. **Den første invitationskode** skulle indsættes i hånden.
 
-1. Kør `schema.sql` i SQL-editoren på projektet.
-2. Slå e-mail-signup til, slå e-mail-bekræftelse fra (lukket kreds, koden er
-   gatekeeperen).
-3. Opret første invitationskode manuelt:
-   ```sql
-   insert into invite_codes (code, created_by, max_uses)
-   values ('KØKKEN-2026', null, 10);
-   ```
-4. Sæt `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` som repo-secrets
-   (deploy-workflowet læser dem allerede).
-5. Opret `ping`-tabellen som `keepalive.yml` kalder:
-   ```sql
-   create table ping (id int primary key default 1);
-   insert into ping (id) values (1);
-   ```
+Til fejlsøgning senere: **`42501` betyder at tabellen findes, men rollen mangler
+GRANT. `PGRST205` betyder at tabellen ikke findes.** Det er den skelnen der
+afgør om skemaet mangler at blive kørt, eller om det bare er lukket af. Man kan
+måle det udefra med anon-nøglen alene:
+
+```bash
+curl "$VITE_SUPABASE_URL/rest/v1/recipes?select=id&limit=1" -H "apikey: $KEY"
+```
+
+`schema.sql` kan køres igen oven på en database der allerede har den: hver
+politik droppes før den oprettes.
 
 **Sikkerhedsmodellen** ligger i RLS, ikke i klienten:
 
@@ -120,16 +121,30 @@ køre på demodata i mellemtiden.
 - `imagery: none` er allerede understøttet i UI'et, så tekst-først virker mens
   det bygges.
 
-### Fase 5 — PWA ⏳
+### Fase 5 — PWA ✅
 
 Dette er det der reelt afgør om appen bliver brugt. En browser-fane er ikke et
 køkkenredskab.
 
-- Manifest + ikoner, `display: standalone`.
-- Service worker: app-shell precache, `stale-while-revalidate` på opskrifter.
-- Kogetilstand skal virke fuldstændig offline når opskriften først er åbnet.
-- Wake lock er allerede implementeret (`useWakeLock`), men falder stille
-  tilbage på Safari iOS < 16.4.
+- Manifest og ikoner i `public/`, `display: standalone`. Ikonerne er rasteret
+  fra `favicon.svg` med et engangsscript — der ligger ikke et billedbibliotek i
+  `package.json` for fire firkanter.
+- `public/sw.js` registreres kun i buildet (`import.meta.env.PROD`), ellers
+  ville den cache sig selv i vejen for HMR.
+- **Ingen precache-liste bygget ved build-tid.** Vite giver assets
+  indholds-hashede navne, så cache-first opnår det samme uden et plugin der
+  skal injicere filnavne i workeren.
+
+| Hvad | Strategi |
+| ---- | -------- |
+| Navigationer | Netværk først, fald tilbage på den cachede skal. Det er også det der lader en ny deploy slå igennem |
+| `assets/*` | Cache først — hashede navne bliver aldrig forældede |
+| Google Fonts | Stale-while-revalidate. Uden det skifter appen til fallback-skrifter offline |
+| `rest/v1/recipes`, `rest/v1/favorites` (kun GET) | Stale-while-revalidate. **Det er det der bærer kogetilstand offline:** en kold start resolver `data.list()` fra cachen |
+| `auth/v1/*`, alt andet end GET | Cachès aldrig |
+
+Wake lock var allerede implementeret (`useWakeLock`), men falder stille tilbage
+på Safari iOS < 16.4.
 
 ### Fase 6 — Finpudsning ⏳
 
@@ -154,8 +169,15 @@ køkkenredskab.
 
 ## 5. Kendte huller
 
-- **Skemaet er ikke kørt.** Se fase 3. Det er den eneste ting mellem appen og
-  at den virker på rigtigt.
+- **`remote`-adapteren er ikke kørt igennem med en rigtig bruger endnu.** Alt
+  omkring den er på plads, men selve gennemløbet — opret bruger, gem opskrift,
+  del den — mangler at blive gjort én gang med to konti.
+- Data-cachen i service workeren tilhører den der var logget ind. Den ryddes i
+  `signOut`. Lukker man browseren uden at logge ud, ligger den til næste gang —
+  hvilket er meningen, det er sådan appen virker offline.
+- Gamle asset-caches ryddes først når `VERSION` i `sw.js` bumpes. Bumper man
+  den ikke, hober bundles fra tidligere deploys sig op. De er små, men de
+  forsvinder ikke af sig selv.
 - `demo` og `imagery` findes som URL-parametre (`?demo=error`,
   `?imagery=none`) til at fremkalde tilstande under udvikling. Harmløse, men
   de er udviklerværktøj, ikke funktioner.
@@ -165,7 +187,7 @@ køkkenredskab.
 - Trinnenes kobling til ingredienser (`ing`) kan ikke redigeres i formularen
   endnu — den bevares ved rettelser, men nye trin får ingen. Kogetilstand
   viser så bare ingen mængder ved det trin.
-- Ingen tests. Datalaget og `scale.js` er det der først bør have nogle.
+- Ingen tests i repoet. Datalaget og `scale.js` er det der først bør have nogle.
 
 ## 6. Sådan er det afprøvet
 
@@ -181,4 +203,17 @@ Alle seks skærme er kørt igennem mod `local`-adapteren i browseren:
   bliver begge til halvanden.
 - Deling: synlighed og personer.
 
-Ikke afprøvet: `remote`-adapteren, som venter på at skemaet bliver kørt.
+PWA'en er afprøvet i Chrome mod et rigtigt build, drevet over
+DevTools-protokollen — ni tjek, alle bestået:
+
+- Service workeren aktiverer, får scope `/opskrifter/`, og overtager siden.
+- Skal-, asset- og fontcache oprettes.
+- Data-cachen forsvinder når `signOut` sender sin besked.
+- **Kogetilstand efter en kold start i flytilstand:** navigér til
+  `/opskrift/r1/kog` uden net, efter at fanen har været lukket. Trin og
+  mængder er der. Det er den test der afgør om resten var besværet værd.
+- Biblioteket virker offline.
+
+Ikke afprøvet endnu: `remote`-adapteren mod en rigtig konto, og dermed heller
+ikke data-cachen med ægte Supabase-svar. Det kræver at fase 3's tre punkter er
+gjort på projektet.
