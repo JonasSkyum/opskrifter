@@ -1,7 +1,9 @@
 -- Opskrifter — databaseskema.
 --
--- Køres én gang i SQL-editoren på Supabase-projektet. Fremgangsmåden med
--- den første invitationskode står i docs/PLAN.md, fase 3.
+-- Køres i SQL-editoren på Supabase-projektet. Filen kan køres igen oven på en
+-- database der allerede har den: hver politik droppes før den oprettes, og
+-- tabeller og kolonner tilføjes betinget. Fremgangsmåden med den første
+-- invitationskode står i docs/PLAN.md, fase 3.
 --
 -- Ingredienser og trin ligger som jsonb frem for i egne tabeller. Det er et
 -- bevidst valg: de læses og skrives altid sammen med opskriften, rækkefølgen
@@ -21,11 +23,13 @@ create table if not exists profiles (
 alter table profiles enable row level security;
 
 -- Lukket kreds: alle må se hinandens navne, ellers kan man ikke dele.
+drop policy if exists "profiler kan læses af indloggede" on profiles;
 create policy "profiler kan læses af indloggede"
   on profiles for select
   to authenticated
   using (true);
 
+drop policy if exists "man kan rette sin egen profil" on profiles;
 create policy "man kan rette sin egen profil"
   on profiles for update
   to authenticated
@@ -172,6 +176,8 @@ as $$
   );
 $$;
 
+drop policy if exists
+  "opskrifter kan læses af ejer, alle, eller den de er delt med" on recipes;
 create policy "opskrifter kan læses af ejer, alle, eller den de er delt med"
   on recipes for select
   to authenticated
@@ -185,22 +191,26 @@ create policy "opskrifter kan læses af ejer, alle, eller den de er delt med"
     )
   );
 
+drop policy if exists "man opretter i eget navn" on recipes;
 create policy "man opretter i eget navn"
   on recipes for insert
   to authenticated
   with check (owner_id = (select auth.uid()));
 
+drop policy if exists "kun ejeren retter" on recipes;
 create policy "kun ejeren retter"
   on recipes for update
   to authenticated
   using (owner_id = (select auth.uid()))
   with check (owner_id = (select auth.uid()));
 
+drop policy if exists "kun ejeren sletter" on recipes;
 create policy "kun ejeren sletter"
   on recipes for delete
   to authenticated
   using (owner_id = (select auth.uid()));
 
+drop policy if exists "delinger kan læses af ejer og modtager" on recipe_shares;
 create policy "delinger kan læses af ejer og modtager"
   on recipe_shares for select
   to authenticated
@@ -213,6 +223,7 @@ create policy "delinger kan læses af ejer og modtager"
     )
   );
 
+drop policy if exists "kun ejeren deler" on recipe_shares;
 create policy "kun ejeren deler"
   on recipe_shares for insert
   to authenticated
@@ -224,6 +235,7 @@ create policy "kun ejeren deler"
     )
   );
 
+drop policy if exists "kun ejeren fjerner deling" on recipe_shares;
 create policy "kun ejeren fjerner deling"
   on recipe_shares for delete
   to authenticated
@@ -247,16 +259,19 @@ create table if not exists favorites (
 
 alter table favorites enable row level security;
 
+drop policy if exists "egne favoritter kan læses" on favorites;
 create policy "egne favoritter kan læses"
   on favorites for select
   to authenticated
   using (user_id = (select auth.uid()));
 
+drop policy if exists "egne favoritter kan tilføjes" on favorites;
 create policy "egne favoritter kan tilføjes"
   on favorites for insert
   to authenticated
   with check (user_id = (select auth.uid()) and can_read_recipe(recipe_id));
 
+drop policy if exists "egne favoritter kan fjernes" on favorites;
 create policy "egne favoritter kan fjernes"
   on favorites for delete
   to authenticated
@@ -287,18 +302,49 @@ create trigger recipes_touch
 
 -- .github/workflows/keepalive.yml læser denne tabel dagligt, så gratis-
 -- projektet ikke sættes på pause efter syv dages stilhed.
+--
+-- Bemærk at "if not exists" ikke retter en tabel der allerede står der. Findes
+-- den i forvejen med en anden form, skal forskellen tilføjes eksplicit som
+-- nedenfor - ellers driver filen og databasen fra hinanden i stilhed.
 create table if not exists ping (
   id int primary key
 );
+
+alter table ping
+  add column if not exists last_seen timestamptz not null default now();
 
 insert into ping (id) values (1) on conflict do nothing;
 
 alter table ping enable row level security;
 
+drop policy if exists "ping kan læses af alle" on ping;
 create policy "ping kan læses af alle"
   on ping for select
   to anon, authenticated
   using (true);
+
+-- ---------------------------------------------------------------------------
+-- Rettigheder
+-- ---------------------------------------------------------------------------
+
+-- RLS afgør hvem der må se hvad. GRANT afgør om rollen overhovedet må røre
+-- tabellen, og det er et separat lag: uden GRANT svarer PostgREST 42501
+-- "permission denied" i stedet for at RLS filtrerer, og appen ser brudt ud
+-- selvom hver eneste politik er rigtig.
+--
+-- Supabase giver normalt disse rettigheder automatisk til nye tabeller i
+-- public, men det afhænger af hvilken rolle der oprettede dem. Vi sætter dem
+-- eksplicit, så filen står på egne ben på et hvilket som helst projekt.
+
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete
+  on profiles, recipes, recipe_shares, favorites
+  to authenticated;
+
+-- anon får kun ping. invite_codes får ingen roller overhovedet - kun
+-- handle_new_user rører den, og den er security definer.
+grant select on ping to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Billeder
@@ -308,6 +354,8 @@ insert into storage.buckets (id, name, public)
 values ('recipe-images', 'recipe-images', false)
 on conflict (id) do nothing;
 
+drop policy if exists
+  "billeder kan ses af dem der må se opskriften" on storage.objects;
 create policy "billeder kan ses af dem der må se opskriften"
   on storage.objects for select
   to authenticated
@@ -320,6 +368,8 @@ create policy "billeder kan ses af dem der må se opskriften"
     )
   );
 
+drop policy if exists
+  "man lægger billeder i sin egen mappe" on storage.objects;
 create policy "man lægger billeder i sin egen mappe"
   on storage.objects for insert
   to authenticated
@@ -328,6 +378,8 @@ create policy "man lægger billeder i sin egen mappe"
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
 
+drop policy if exists
+  "man sletter billeder i sin egen mappe" on storage.objects;
 create policy "man sletter billeder i sin egen mappe"
   on storage.objects for delete
   to authenticated

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useAuth } from '../auth/authContext.js'
 import { data } from './index.js'
 import { StoreContext } from './storeContext.js'
 
@@ -10,9 +11,19 @@ import { StoreContext } from './storeContext.js'
  * holdes i hukommelsen. Det gør navigation mellem bibliotek og opskrift
  * øjeblikkelig, og gør kogetilstand robust hvis forbindelsen falder ud
  * midt i madlavningen.
+ *
+ * Hentningen følger sessionen, ikke mount. Providerne ligger uden om routeren,
+ * så uden det ville samlingen blive hentet som anon på login-skærmen, fejle på
+ * RLS, og stå i fejltilstand bagefter - også når man var kommet ind.
  */
 
 export function RecipeStore({ children }) {
+  const { ready: authReady, session } = useAuth()
+
+  // Nøglen er brugeren, ikke sessionsobjektet. Demotilstand har intet id, kun
+  // en e-mail; begge dur til at se om det er en ny person foran skærmen.
+  const identity = session ? (session.user.id ?? session.user.email) : null
+
   const [recipes, setRecipes] = useState([])
   const [favorites, setFavorites] = useState([])
   const [status, setStatus] = useState('loading') // loading | ready | error
@@ -32,8 +43,20 @@ export function RecipeStore({ children }) {
   }, [])
 
   useEffect(() => {
+    // Vent til sessionen er afgjort. Ellers henter vi som anon og fejler.
+    if (!authReady) return
+
+    if (identity === null) {
+      // Logget ud. Ryd med det samme - ellers ser den næste der logger ind på
+      // samme enhed den forriges samling indtil hentningen er færdig.
+      setRecipes([])
+      setFavorites([])
+      setStatus('ready')
+      return
+    }
+
     reload()
-  }, [reload])
+  }, [authReady, identity, reload])
 
   const value = useMemo(() => {
     const replace = (recipe) =>
